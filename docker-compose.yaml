@@ -1,0 +1,120 @@
+services:
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:7.4.4
+  #   container_name:  creditcard_zookeeper
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   ports:
+  #     - 22181:2181
+  
+  # kafka:
+  #   image: confluentinc/cp-kafka:7.4.4
+  #   container_name:  kafka
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - 29092:29092
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #   healthcheck:
+  #     test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+
+  # spark-master:
+  #   image: bitnami/spark:3.3.0
+  #   container_name: spark_master
+  #   environment:
+  #     - SPARK_MODE=master
+  #   ports:
+  #     - "7077:7077"
+  #     - "8080:8080"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+
+  # spark-worker:
+  #   image: bitnami/spark:3.3.0
+  #   container_name: spark_worker
+  #   environment:
+  #     - SPARK_MODE=worker
+  #     - SPARK_MASTER_URL=spark://spark_master:7077
+  #   ports:
+  #     - "8081:8081"
+  #   depends_on:
+  #     - spark-master
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8081"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+
+  db:
+    image: mysql:8.0.33
+    container_name: creditcard_mysql
+    environment:
+      MYSQL_DATABASE: creditcard
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./creditcard_mysql_data:/var/lib/mysql
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  # spark:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.spark
+  #   container_name: creditcard_spark
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   ports:
+  #     - "4040:4040"
+  #     - "7077:7077"
+  #     - "8080:8080"
+
+  django:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: creditcard_django
+    # volumes:
+    #   - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+          condition: service_healthy
+      # kafka:
+      #     condition: service_healthy
+    environment:
+      DATABASE_NAME: creditcard
+      DATABASE_USER: admin
+      DATABASE_PASSWORD: 123456
+      DATABASE_HOST: db
+      DATABASE_PORT: 3306
+      # KAFKA_BROKER: kafka:9092
+      # SPARK_SUBMIT_PATH: /opt/spark/bin/spark-submit
+      # SPARK_MASTER: spark://spark:7077
+
+volumes:
+  creditcard_mysql_data:

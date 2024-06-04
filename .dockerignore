@@ -1,0 +1,14 @@
+node_modules
+.git
+.DS_Store
+creditcard_mysql_data
+
+# Ignore Dockerfile itself (if not named differently)
+Dockerfile*
+
+# Ignore docker-compose.yml file
+docker-compose.yml
+
+# kafka_2.13-3.6.2.tgz
+# spark-3.5.1-bin-hadoop3.tgz
+# spark_jars
