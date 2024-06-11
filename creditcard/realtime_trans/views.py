@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from .models import Creditcard
+from django.db.models import Q
+from .forms import TransactionQuery, IdQuery
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import subprocess
@@ -10,11 +12,7 @@ spark_processing_pid = None
 
 # Create your views here.
 def index(request):
-    transactions = Creditcard.objects.all()
-    context = {
-        'transactions': transactions
-    }
-    return render(request, 'index.html', context)
+    return render(request, 'index.html')
 
 
 @csrf_exempt
@@ -74,3 +72,45 @@ def stop_spark_processing(request):
                 return JsonResponse({'status': 'No Spark processing running'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'Error', 'message': str(e)}, status=500)
+        
+def query_ids(request):
+    if request.method == 'POST':
+        form = IdQuery(request.POST)
+        if form.is_valid():
+            transactions = Creditcard.objects.all()
+            if form.cleaned_data['class_field']:
+                transactions = transactions.filter(class_field__gt=form.cleaned_data['class_field'])
+            if form.cleaned_data['time']:
+                transactions = transactions.filter(Q(time__gt=form.cleaned_data['time']-3) & Q(time__lt=form.cleaned_data['time']+3))
+            if form.cleaned_data['amount']:
+                transactions = transactions.filter(Q(amount__gt=form.cleaned_data['amount']-20) & Q(amount__lt=form.cleaned_data['amount']+20))
+            transaction_data = [
+                {
+                    'id': transaction.id
+                }
+                for transaction in transactions
+            ]
+            if transaction_data is None:
+                transaction_data = []
+            return JsonResponse({'transaction_data': transaction_data}, status=200)
+        else:
+            return JsonResponse({'status': 'Error', 'error': form.errors}, status=400)
+        
+def query_transaction(request):
+    if request.method == 'POST':
+        form = TransactionQuery(request.POST)
+        if form.is_valid():
+            transaction = Creditcard.objects.get(id=form.cleaned_data['id'])
+            # print(transaction)
+            if transaction is not None:
+                transaction_data = {
+                        'time': transaction.time,
+                        'amount': transaction.amount,
+                        'class_field': transaction.class_field
+                    }
+            else:
+                transaction_data = {}
+            
+            return JsonResponse({'transaction_data': transaction_data}, status=200)
+        else:
+            return JsonResponse({'status': 'Error', 'error': form.errors}, status=400)

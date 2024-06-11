@@ -34,8 +34,11 @@ echo "Running Django migrations..."
 python manage.py makemigrations
 python manage.py migrate
 
+# Export the DJANGO_SETTINGS_MODULE variable
+# export DJANGO_SETTINGS_MODULE=creditcard.settings
+
 echo "Starting Django server..."
 python manage.py runserver 0.0.0.0:8000 &
-
+# daphne -b 0.0.0.0 -p 8000 creditcard.asgi:application
 # Wait for all background processes to finish
 wait

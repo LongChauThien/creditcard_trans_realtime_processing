@@ -36,11 +36,11 @@ if __name__ == "__main__":
     data = pd.read_csv(conf_file_path+'/creditcard.csv')
     df = pd.DataFrame(data[['Time', 'Amount', 'Class']])
 
-    for i in range(100):
+    for i in range(500):
         message = {}
         print("Preparing message: " + str(i))
         event_datetime = datetime.now()
-        message['Id'] = str(random.randint(1, 100)) + str(event_datetime)
+        message['Id'] = str(event_datetime)
         message['Time'] = df['Time'][i]
         message['Amount'] = df['Amount'][i]
         # message['Class'] = str(df['Class'][i])
