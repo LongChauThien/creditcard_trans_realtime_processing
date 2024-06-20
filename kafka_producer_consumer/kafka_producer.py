@@ -34,20 +34,22 @@ if __name__ == "__main__":
                                        value_serializer=lambda x: dumps(x).encode('utf-8'))
 
     data = pd.read_csv(conf_file_path+'/creditcard.csv')
-    df = pd.DataFrame(data[['Time', 'Amount', 'Class']])
+    df = pd.DataFrame(data)
 
-    for i in range(500):
+    for i in range(6290,7000):
         message = {}
         print("Preparing message: " + str(i))
         event_datetime = datetime.now()
         message['Id'] = str(event_datetime)
         message['Time'] = df['Time'][i]
         message['Amount'] = df['Amount'][i]
+        for j in range(28):
+            message['V'+str(j+1)] = df['V'+str(j+1)][i]
         # message['Class'] = str(df['Class'][i])
-        print("Message: ", message)
+        # print("Message: ", message)
         #message_list.append(message)
         kafka_producer_obj.send(KAFKA_TOPIC_NAME_CONS, message)
-        time.sleep(1)
+        time.sleep(3)
 
 
     print("Kafka Producer Application Completed. ")

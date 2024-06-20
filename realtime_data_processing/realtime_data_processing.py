@@ -57,7 +57,7 @@ def save_to_mysql_table(current_df, epoc_id, mysql_table_name):
     print("Inside save_to_mysql_table function")
     print("Printing epoc_id: ")
     print(epoc_id)
-    print("Printing mysql_table_name: " + mysql_table_name)
+    # print("Printing mysql_table_name: " + mysql_table_name)
 
     mysql_jdbc_url = "jdbc:mysql://" + mysql_host_name + ":" + str(mysql_port_no) + "/" + mysql_database_name
 
@@ -82,15 +82,7 @@ if __name__ == "__main__":
         .master("local[*]") \
         .getOrCreate()
 
-    # spark.sparkContext.setLogLevel("ERROR")
 
-    # train = spark.read.format("csv").load("C:\\Users\\Asus\\Documents\\HK6\\CS338\\creditcard\\kafka_producer_consumer\\creditcard.csv",header = 'True',inferSchema='True')
-    # train = train.select('Time','Amount','Class')
-    # assembler = VectorAssembler(inputCols=['Time','Amount'],outputCol="features")
-    # # df_train = assembler.transform(train)
-    # lgr = LogisticRegression(labelCol='Class',featuresCol='features')
-    # pipeline = Pipeline( stages = [assembler,lgr, ])
-    # model = pipeline.fit(train)
     model = PipelineModel.read().load("/code/pretrained_model/model")
 
     # Construct a streaming DataFrame that reads from test-topic
@@ -102,74 +94,57 @@ if __name__ == "__main__":
         .option("startingOffsets", "latest") \
         .load()
 
-    # print("Printing Schema of trans_df: ")
-    # trans_df.printSchema()
-    # key, value, topic, partition, offset, timestamp
-
     trans_df1 = trans_df.selectExpr("CAST(value AS STRING)")
-    # trans_df1.printSchema()
-    # Define a schema for the trans data
-    # order_id,order_product_name,order_card_type,order_amount,order_datetime,order_country_name,order_city_name,order_ecommerce_website_name
+    
     trans_schema = StructType() \
         .add("Id", StringType()) \
         .add("Time", FloatType()) \
-        .add("Amount", FloatType()) 
-        # .add("Class", StringType()) 
-
-    # {'order_id': 1, 'order_product_name': 'Laptop', 'order_card_type': 'MasterCard',
-    # 'order_amount': 38.48, 'order_datetime': '2020-10-21 10:59:10', 'order_country_name': 'Italy',
-    # 'order_city_name': 'Rome', 'order_ecommerce_website_name': 'www.flipkart.com'}
+        .add("Amount", FloatType()) \
+        .add("V1", FloatType()) \
+        .add("V2", FloatType()) \
+        .add("V3", FloatType()) \
+        .add("V4", FloatType()) \
+        .add("V5", FloatType()) \
+        .add("V6", FloatType()) \
+        .add("V7", FloatType()) \
+        .add("V8", FloatType()) \
+        .add("V9", FloatType()) \
+        .add("V10", FloatType()) \
+        .add("V11", FloatType()) \
+        .add("V12", FloatType()) \
+        .add("V13", FloatType()) \
+        .add("V14", FloatType()) \
+        .add("V15", FloatType()) \
+        .add("V16", FloatType()) \
+        .add("V17", FloatType()) \
+        .add("V18", FloatType()) \
+        .add("V19", FloatType()) \
+        .add("V20", FloatType()) \
+        .add("V21", FloatType()) \
+        .add("V22", FloatType()) \
+        .add("V23", FloatType()) \
+        .add("V24", FloatType()) \
+        .add("V25", FloatType()) \
+        .add("V26", FloatType()) \
+        .add("V27", FloatType()) \
+        .add("V28", FloatType()) 
+    
     trans_df2 = trans_df1\
         .select(from_json(col("value"), trans_schema)\
         .alias("trans"))
-    # trans_df2.printSchema()
-
-    # trans_df2.printSchema()
-
-    # trans -> ['order_id': 1, 'order_product_name': 'Laptop', ....]
 
     trans_df3 = trans_df2.select("trans.*")
-    # print("Printing schema of trans_df3 before creating date & hour column from order_datetime ")
-    # trans_df3.printSchema()
-    # trans_agg_write_stream_pre = trans_df3 \
-    #     .writeStream \
-    #     .trigger(processingTime='10 seconds') \
-    #     .outputMode("update") \
-    #     .option("truncate", "false")\
-    #     .format("console") \
-    #     .start()
-    # trans_agg_write_stream_pre_hdfs = trans_df3.writeStream \
-    #     .trigger(processingTime='10 seconds') \
-    #     .format("parquet") \
-    #     .option("path", "/tmp/data/ecom_data/raw") \
-    #     .option("checkpointLocation", "trans-agg-write-stream-pre-checkpoint") \
-    #     .partitionBy("partition_date", "partition_hour") \
-    #     .start()
+  
     trans_df4 = model.transform(trans_df3)
-    # trans_df4.printSchema()
-    trans_df4 = trans_df4.select(['Id','Time','Amount','prediction'])  
+    trans_df4 = trans_df4.select(['Id','Time','Amount','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17','V18','V19','V20','V21','V22','V23','V24','V25','V26','V27','V28','prediction'])  
     trans_df4 = trans_df4.withColumnRenamed("prediction","Class")  
     trans_agg_write_stream = trans_df4 \
         .writeStream \
-        .trigger(processingTime='2 seconds') \
+        .trigger(processingTime='3 seconds') \
         .outputMode("update") \
         .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_table_name)) \
         .start()
- 
-    # trans_agg_write_stream = trans_df3 \
-    #     .writeStream \
-    #     .trigger(processingTime='10 seconds') \
-    #     .outputMode("update") \
-    #     .format("console") \
-    #     .start()
-    # trans_agg_write_stream2 = trans_df4 \
-    #     .writeStream \
-    #     .trigger(processingTime='15 seconds') \
-    #     .outputMode("update") \
-    #     .foreachBatch(lambda current_df, epoc_id: print(epoc_id)) \
-    #     .start()
 
     trans_agg_write_stream.awaitTermination()
-    # trans_agg_write_stream2.awaitTermination()
 
     print("Real-Time Data Processing Application Completed.")

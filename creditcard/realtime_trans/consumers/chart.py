@@ -9,7 +9,7 @@ class ChartConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_data(self):
-        records = Creditcard.objects.order_by('-id')[:40]
+        records = Creditcard.objects.order_by('-id')[:100]
         dataClass0 = []
         dataClass1 = []
         for record in records:

@@ -1,1 +1,1 @@
-{"class":"org.apache.spark.ml.PipelineModel","timestamp":1715617933635,"sparkVersion":"3.5.1","uid":"PipelineModel_2f219766d380","paramMap":{"stageUids":["VectorAssembler_44b958b33027","LogisticRegression_5851d0a4c003"]},"defaultParamMap":{}}
+{"class":"pyspark.ml.pipeline.PipelineModel","timestamp":1718808629630,"sparkVersion":"3.5.1","uid":"PipelineModel_5801e2c6e3cf","paramMap":{"stageUids":["VectorAssembler_df38d4b3a7d0","RobustScaler_84acc618b67c","VectorAssembler_6f21feb2be6a","SparkXGBClassifier_73da11938b66"],"language":"Python"},"defaultParamMap":{}}

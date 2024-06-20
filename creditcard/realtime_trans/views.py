@@ -78,12 +78,19 @@ def query_ids(request):
         form = IdQuery(request.POST)
         if form.is_valid():
             transactions = Creditcard.objects.all()
-            if form.cleaned_data['class_field']:
-                transactions = transactions.filter(class_field__gt=form.cleaned_data['class_field'])
-            if form.cleaned_data['time']:
-                transactions = transactions.filter(Q(time__gt=form.cleaned_data['time']-3) & Q(time__lt=form.cleaned_data['time']+3))
-            if form.cleaned_data['amount']:
-                transactions = transactions.filter(Q(amount__gt=form.cleaned_data['amount']-20) & Q(amount__lt=form.cleaned_data['amount']+20))
+            print(form.cleaned_data['class_field'])
+            print(form.cleaned_data['amount'])
+            print(form.cleaned_data['time'])
+            if form.cleaned_data['time'] is not None:
+                transactions = transactions.filter(Q(time__gte=form.cleaned_data['time']-3) & Q(time__lte=form.cleaned_data['time']+3))
+
+            if form.cleaned_data['amount'] is not None:
+                transactions = transactions.filter(Q(amount__gte=form.cleaned_data['amount']-20) & Q(amount__lte=form.cleaned_data['amount']+20))
+
+            if form.cleaned_data['class_field'] is not None:
+                transactions = transactions.filter(class_field=form.cleaned_data['class_field'])
+            
+
             transaction_data = [
                 {
                     'id': transaction.id
@@ -100,16 +107,47 @@ def query_transaction(request):
     if request.method == 'POST':
         form = TransactionQuery(request.POST)
         if form.is_valid():
-            transaction = Creditcard.objects.get(id=form.cleaned_data['id'])
+            try:
+                transaction = Creditcard.objects.get(id=form.cleaned_data['id'])
+            except Creditcard.DoesNotExist:
+                transaction = None
             # print(transaction)
             if transaction is not None:
                 transaction_data = {
                         'time': transaction.time,
                         'amount': transaction.amount,
+                        'v1': transaction.v1,
+                        'v2': transaction.v2,
+                        'v3': transaction.v3,
+                        'v4': transaction.v4,
+                        'v5': transaction.v5,
+                        'v6': transaction.v6,
+                        'v7': transaction.v7,
+                        'v8': transaction.v8,
+                        'v9': transaction.v9,
+                        'v10': transaction.v10,
+                        'v11': transaction.v11,
+                        'v12': transaction.v12,
+                        'v13': transaction.v13,
+                        'v14': transaction.v14,
+                        'v15': transaction.v15,
+                        'v16': transaction.v16,
+                        'v17': transaction.v17,
+                        'v18': transaction.v18,
+                        'v19': transaction.v19,
+                        'v20': transaction.v20,
+                        'v21': transaction.v21,
+                        'v22': transaction.v22,
+                        'v23': transaction.v23,
+                        'v24': transaction.v24,
+                        'v25': transaction.v25,
+                        'v26': transaction.v26,
+                        'v27': transaction.v27,
+                        'v28': transaction.v28,
                         'class_field': transaction.class_field
                     }
             else:
-                transaction_data = {}
+                transaction_data = None
             
             return JsonResponse({'transaction_data': transaction_data}, status=200)
         else:
